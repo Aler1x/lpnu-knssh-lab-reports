@@ -1,5 +1,7 @@
 # lpnu-lab-reports
 
+English | [Українська](README.uk.md)
+
 An agent skill that writes and formats lab reports for the Department of Artificial Intelligence Systems, Lviv Polytechnic National University (LPNU).
 
 - Reports are in Ukrainian.
@@ -32,15 +34,3 @@ Then ask your agent, for example: "Use lpnu-lab-reports to make a report for lab
 | `assets/report.tex` | Report template with the title page |
 | `assets/university-logo.png` | University logo for the title page |
 | `scripts/export_docx.py` | LaTeX to DOCX export with the template formatting |
-
----
-
-## Українською
-
-Скіл для агента, який допомагає писати й оформлювати лабораторні звіти кафедри систем штучного інтелекту Львівської політехніки. Оригінал — LaTeX, результати — PDF та редагований Word. Оформлення за ДСТУ 3008:2015.
-
-Встановлення:
-
-```sh
-npx skills add Aler1x/lpnu-knssh-lab-reports
-```
