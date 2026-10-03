@@ -10,7 +10,7 @@ An agent skill that writes and formats lab reports for the Department of Artific
 ## Install
 
 ```sh
-npx skills add Aler1x/lpnu-lab-reports
+npx skills add Aler1x/lpnu-knssh-lab-reports
 ```
 
 Then ask your agent, for example: "Use lpnu-lab-reports to make a report for lab 3 from my code and results."
@@ -42,5 +42,5 @@ Then ask your agent, for example: "Use lpnu-lab-reports to make a report for lab
 Встановлення:
 
 ```sh
-npx skills add Aler1x/lpnu-lab-reports
+npx skills add Aler1x/lpnu-knssh-lab-reports
 ```
