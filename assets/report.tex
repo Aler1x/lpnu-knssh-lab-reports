@@ -1,0 +1,143 @@
+\documentclass[14pt,a4paper]{extarticle}
+\usepackage[left=25mm,right=15mm,top=20mm,bottom=20mm,headheight=18pt]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{ukrainian}
+\setotherlanguage{english}
+\setmainfont{Times New Roman}
+\newfontfamily\cyrillicfont{Times New Roman}
+\setmonofont{Courier New}
+\newfontfamily\cyrillicfonttt{Courier New}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{indentfirst}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0pt}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{caption}
+\DeclareCaptionLabelSeparator{dstu}{ — }
+\captionsetup{font=normalsize,labelsep=dstu}
+\captionsetup[figure]{name=Рисунок,justification=centering}
+\captionsetup[table]{name=Таблиця,position=top,justification=raggedright,
+  singlelinecheck=false,margin={1.25cm,0cm}}
+\usepackage{titlesec}
+\titleformat{\section}{\centering\normalfont\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\bfseries}{\thesubsection}{1em}{}
+\titlespacing*{\section}{0pt}{2\baselineskip}{2\baselineskip}
+\titlespacing*{\subsection}{1.25cm}{2\baselineskip}{2\baselineskip}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\usepackage[hidelinks]{hyperref}
+\renewcommand{\labelitemi}{—}
+\renewcommand{\refname}{ПЕРЕЛІК ДЖЕРЕЛ ПОСИЛАННЯ}
+\emergencystretch=2em
+
+\graphicspath{{./pictures/}}
+\newcommand{\ministry}{МІНІСТЕРСТВО ОСВІТИ І НАУКИ УКРАЇНИ}
+\newcommand{\university}{НАЦІОНАЛЬНИЙ УНІВЕРСИТЕТ «ЛЬВІВСЬКА ПОЛІТЕХНІКА»}
+\newcommand{\institute}{Інститут комп'ютерних наук та інформаційних технологій}
+\newcommand{\department}{систем штучного інтелекту}
+\newcommand{\subject}{[Назва дисципліни]}
+\newcommand{\lecturer}{{[Посада лектора]}\\{}[Прізвище та ініціали]}
+\newcommand{\teacher}{{[Посада викладача]}\\{}[Прізвище та ініціали]}
+\newcommand{\mygroup}{[Шифр групи]}
+\newcommand{\studentname}{{[Ваше прізвище та ініціали]}}
+\newcommand{\studentdescription}{студент групи}
+\newcommand{\studentrole}{Виконав}
+\newcommand{\teacherrole}{Прийняв}
+\newcommand{\lab}{[Номер]}
+\newcommand{\variant}{[Номер]}
+\newcommand{\theme}{[Тема лабораторної роботи]}
+\newcommand{\purpose}{[Мета лабораторної роботи]}
+\newcommand{\city}{Львів}
+\newcommand{\reportyear}{\the\year}
+
+\begin{document}
+\newgeometry{left=20mm,right=20mm,top=15mm,bottom=15mm}
+\begin{titlepage}
+    \singlespacing
+    \thispagestyle{empty}
+    \begin{center}
+        \textbf{\ministry\\\university}
+    \end{center}
+    \vspace{10pt}
+    \begin{center}
+        \institute\\[6pt]
+        Кафедра \department
+    \end{center}
+    \begin{center}
+        \includegraphics[width=60mm]{university-logo.png}
+    \end{center}
+    \vspace{10pt}
+    \begin{center}
+        \textbf{ЗВІТ}\\[10pt]
+        до лабораторної роботи №~\lab\\
+        \textbf{на тему}: «\textit{\theme}»\\
+        \textbf{з дисципліни}: «\subject»
+    \end{center}
+    \vspace{16pt}
+    \begin{flushright}
+        \textbf{Лектор}:\\
+        \lecturer\\[16pt]
+        \textbf{\studentrole}:\\
+        \studentdescription{} \mygroup\\
+        \studentname\\[16pt]
+        \textbf{\teacherrole}:\\
+        \teacher\\[16pt]
+        «\rule{1cm}{0.15mm}» \rule{1.5cm}{0.15mm} \reportyear{} р.\\
+        $\sum = {}$\rule{1cm}{0.15mm}\ldots\ldots\ldots
+    \end{flushright}
+    \vfill
+    \begin{center}
+        \textbf{\city{} — \reportyear}
+    \end{center}
+\end{titlepage}
+\restoregeometry
+\setcounter{page}{2}
+
+\section*{ТЕМА РОБОТИ}
+[Тема з методичних вказівок.]
+
+\section*{МЕТА РОБОТИ}
+[Мета з методичних вказівок або погоджене формулювання.]
+
+\section{ЗАВДАННЯ}
+[Умова, варіант, вхідні дані та очікуваний результат.]
+
+\section{ХІД РОБОТИ ТА РЕЗУЛЬТАТИ}
+[Опис фактично виконаних кроків, код, вимірювання та їх пояснення.]
+
+% Додайте лише фактичні результати. Приклади конструкцій:
+% На рисунку~\ref{fig:result} показано результат виконання.
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=0.85\linewidth]{images/result.png}
+%   \caption{Результат виконання}\label{fig:result}
+% \end{figure}
+%
+% Дані наведено в таблиці~\ref{tab:results}.
+% \begin{table}[htbp]
+%   \caption{Результати вимірювань}\label{tab:results}
+%   \centering
+%   \begin{tabular}{ll}
+%     Параметр & Значення \\
+%     Параметр 1 & Фактичне значення
+%   \end{tabular}
+% \end{table}
+%
+% Середнє значення обчислено за формулою~\eqref{eq:mean}.
+% \begin{equation}\label{eq:mean}
+%   \bar{x}=\frac{1}{n}\sum_{i=1}^{n}x_i
+% \end{equation}
+% \noindent де $x_i$ — результат вимірювання; $n$ — кількість вимірювань.
+
+\section*{ВИСНОВКИ}
+[Що виконано, які результати отримано та чи досягнуто мети.]
+
+% Якщо використано джерела, додайте \cite{key} у тексті та
+% thebibliography з \bibitem{key} у порядку першого згадування.
+\end{document}

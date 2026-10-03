@@ -1,0 +1,4 @@
+interface:
+  display_name: "Лабораторні СШІ · LaTeX"
+  short_description: "Звіти за ДСТУ з LaTeX у PDF та Word"
+  default_prompt: "Використай $lpnu-lab-reports, щоб підготувати лабораторний звіт за моїм завданням і результатами та експортувати його з LaTeX у PDF і Word."
