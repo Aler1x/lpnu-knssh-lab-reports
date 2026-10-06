@@ -24,8 +24,8 @@
 \usepackage{titlesec}
 \titleformat{\section}{\centering\normalfont\bfseries}{\thesection}{1em}{}
 \titleformat{\subsection}{\normalfont\bfseries}{\thesubsection}{1em}{}
-\titlespacing*{\section}{0pt}{2\baselineskip}{2\baselineskip}
-\titlespacing*{\subsection}{1.25cm}{2\baselineskip}{2\baselineskip}
+\titlespacing*{\section}{0pt}{\baselineskip}{\baselineskip}
+\titlespacing*{\subsection}{1.25cm}{\baselineskip}{\baselineskip}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhf{}
@@ -33,7 +33,6 @@
 \renewcommand{\headrulewidth}{0pt}
 \usepackage[hidelinks]{hyperref}
 \renewcommand{\labelitemi}{—}
-\renewcommand{\refname}{ПЕРЕЛІК ДЖЕРЕЛ ПОСИЛАННЯ}
 \emergencystretch=2em
 
 \graphicspath{{./pictures/}}
@@ -57,6 +56,7 @@
 \newcommand{\reportyear}{\the\year}
 
 \begin{document}
+\renewcommand{\refname}{ПЕРЕЛІК ДЖЕРЕЛ ПОСИЛАННЯ}
 \newgeometry{left=20mm,right=20mm,top=15mm,bottom=15mm}
 \begin{titlepage}
     \singlespacing
@@ -113,14 +113,14 @@
 
 % Додайте лише фактичні результати. Приклади конструкцій:
 % На рисунку~\ref{fig:result} показано результат виконання.
-% \begin{figure}[htbp]
+% \begin{figure}[!htbp]
 %   \centering
 %   \includegraphics[width=0.85\linewidth]{images/result.png}
 %   \caption{Результат виконання}\label{fig:result}
 % \end{figure}
 %
 % Дані наведено в таблиці~\ref{tab:results}.
-% \begin{table}[htbp]
+% \begin{table}[!htbp]
 %   \caption{Результати вимірювань}\label{tab:results}
 %   \centering
 %   \begin{tabular}{ll}

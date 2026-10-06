@@ -4,8 +4,10 @@
 import argparse
 from copy import deepcopy
 from datetime import date
+import json
 import re
 from pathlib import Path
+from os import pathsep
 import subprocess
 from tempfile import TemporaryDirectory
 
@@ -17,7 +19,7 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
 
-def format_document(document):
+def format_document(document, heading_space_pt=21, table_spacing=1, caption_spacing=1, figure_scale=1):
     for section in document.sections:
         section.page_width, section.page_height = Cm(21), Cm(29.7)
         section.top_margin = section.bottom_margin = Cm(2)
@@ -58,7 +60,7 @@ def format_document(document):
         paragraph = style.paragraph_format
         paragraph.keep_with_next = True
         paragraph.first_line_indent = Cm(0 if level == 1 else 1.25)
-        paragraph.space_before = paragraph.space_after = Pt(42)
+        paragraph.space_before = paragraph.space_after = Pt(heading_space_pt)
         paragraph.alignment = (
             WD_ALIGN_PARAGRAPH.CENTER if level == 1 else WD_ALIGN_PARAGRAPH.LEFT
         )
@@ -74,6 +76,7 @@ def format_document(document):
     figure_style.alignment = WD_ALIGN_PARAGRAPH.CENTER
     figure_style.first_line_indent = Cm(0)
     figure_style.keep_with_next = True
+    figure_style.line_spacing = caption_spacing
 
     title_paragraphs = []
     for paragraph in document.paragraphs:
@@ -147,6 +150,7 @@ def format_document(document):
             fmt = paragraph.paragraph_format
             fmt.first_line_indent = Cm(1.25 if label == 'Таблиця' else 0)
             fmt.keep_with_next = label == 'Таблиця'
+            fmt.line_spacing = caption_spacing
             paragraph.alignment = (
                 WD_ALIGN_PARAGRAPH.LEFT if label == 'Таблиця'
                 else WD_ALIGN_PARAGRAPH.CENTER
@@ -158,11 +162,87 @@ def format_document(document):
                 paragraph._p.insert(1 if paragraph._p.pPr is not None else 0, run._r)
 
     for table in document.tables:
-        for row in table.rows:
+        for index, row in enumerate(table.rows):
+            properties = row._tr.get_or_add_trPr()
+            properties.append(OxmlElement('w:cantSplit'))
+            if index == 0:
+                properties.append(OxmlElement('w:tblHeader'))
             for cell in row.cells:
                 for paragraph in cell.paragraphs:
-                    paragraph.paragraph_format.first_line_indent = Cm(0)
+                    fmt = paragraph.paragraph_format
+                    fmt.first_line_indent = Cm(0)
+                    fmt.line_spacing = table_spacing
+                    fmt.keep_with_next = (
+                        index < len(table.rows) - 1 if len(table.rows) <= 10 else index == 0
+                    )
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+    title_image_ids = {
+        element.get('id') for paragraph in lines
+        for element in paragraph._p.xpath('.//wp:docPr')
+    }
+    for shape in document.inline_shapes:
+        if str(shape._inline.docPr.id) not in title_image_ids:
+            shape.width = round(shape.width * figure_scale)
+            shape.height = round(shape.height * figure_scale)
+
+    bibliography_started = False
+    for paragraph in document.paragraphs:
+        if paragraph.style.name.startswith('Heading'):
+            bibliography_started = paragraph.text == 'ПЕРЕЛІК ДЖЕРЕЛ ПОСИЛАННЯ'
+        elif bibliography_started:
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            paragraph.paragraph_format.first_line_indent = Cm(0)
+            paragraph.paragraph_format.keep_together = True
+
+
+def prepare_bibliography(latex):
+    """Keep the template's manual bibliography as numbered paragraphs."""
+    pattern = r'\\begin\{thebibliography\}\{[^}]*\}(.*?)\\end\{thebibliography\}'
+    matches = list(re.finditer(pattern, latex, re.S))
+    if not matches:
+        return latex, {}
+    if len(matches) != 1:
+        raise ValueError('Only one thebibliography block is supported.')
+    block = matches[0]
+    items = list(re.finditer(r'\\bibitem\{([^}]+)\}', block[1]))
+    if not items or len(re.findall(r'\\bibitem\b', block[1])) != len(items):
+        raise ValueError('Use plain \\bibitem{key}; optional labels are not supported.')
+    numbers = {}
+    entries = []
+    for index, item in enumerate(items):
+        key = item[1]
+        if key in numbers:
+            raise ValueError(f'Duplicate bibliography key: {key}')
+        numbers[key] = index + 1
+        end = items[index + 1].start() if index + 1 < len(items) else len(block[1])
+        entry = block[1][item.end():end].strip()
+        entries.append(r'{[' + str(index + 1) + ']} ' + entry + r'\par')
+    replacement = r'\section*{ПЕРЕЛІК ДЖЕРЕЛ ПОСИЛАННЯ}' + '\n' + '\n'.join(entries)
+    return latex[:block.start()] + replacement + latex[block.end():], numbers
+
+
+def number_citations(node, numbers, used):
+    """Use Pandoc's citation nodes, leaving code and comments untouched."""
+    if isinstance(node, list):
+        return [number_citations(item, numbers, used) for item in node]
+    if not isinstance(node, dict):
+        return node
+    if node.get('t') == 'Cite':
+        citations = node['c'][0]
+        labels = []
+        for citation in citations:
+            key = citation['citationId']
+            if key not in numbers:
+                raise ValueError(f'Citation has no bibliography entry: {key}')
+            if (citation['citationPrefix'] or citation['citationSuffix']
+                    or citation['citationMode']['t'] != 'NormalCitation'):
+                raise ValueError('Use plain \\cite{key}; citation notes/modes need separate conversion.')
+            if key not in used:
+                used.append(key)
+            labels.append(str(numbers[key]))
+        return {'t': 'Str', 'c': '[' + ', '.join(labels) + ']'}
+    return {key: number_citations(value, numbers, used) for key, value in node.items()}
 
 
 def main():
@@ -170,25 +250,47 @@ def main():
     parser.add_argument('source', type=Path)
     parser.add_argument('output', type=Path)
     parser.add_argument('--pandoc', default='pandoc')
+    parser.add_argument('--heading-space-pt', type=float, default=21)
+    parser.add_argument('--table-line-spacing', type=float, default=1)
+    parser.add_argument('--caption-line-spacing', type=float, default=1)
+    parser.add_argument('--figure-scale', type=float, default=1)
     args = parser.parse_args()
     source, output = args.source.resolve(), args.output.resolve()
     if output.exists():
         parser.error(f'Output already exists: {output}')
     if source.suffix.lower() != '.tex' or output.suffix.lower() != '.docx':
         parser.error('Expected a .tex input and a .docx output.')
+    if (args.heading_space_pt < 0 or args.table_line_spacing <= 0
+            or args.caption_line_spacing <= 0 or not 0 < args.figure_scale <= 1):
+        parser.error('Spacing must be positive (heading spacing may be zero); figure scale is 0 < scale <= 1.')
     with TemporaryDirectory(prefix='lpnu-docx-') as temp:
         intermediate = Path(temp) / 'converted.docx'
         # Keep title blanks inline instead of Pandoc block separators.
         latex = re.sub(r'\\rule\{([0-9.]+)cm\}\{0\.15mm\}',
                        lambda match: r'\_' * round(float(match[1]) * 4),
                        source.read_text().replace(r'\the\year', str(date.today().year)))
+        resource_paths = [str(source.parent)]
+        graphics = re.search(r'\\graphicspath\{((?:\{[^}]*\})+)\}', latex)
+        if graphics:
+            resource_paths.extend(str(source.parent / path)
+                                  for path in re.findall(r'\{([^}]*)\}', graphics[1]))
+        latex, numbers = prepare_bibliography(latex)
+        parsed = subprocess.run([
+            args.pandoc, '--from=latex', '--to=json', '--fail-if-warnings',
+        ], cwd=source.parent, input=latex, text=True, capture_output=True, check=True)
+        used = []
+        ast = number_citations(json.loads(parsed.stdout), numbers, used)
+        if list(numbers) != used:
+            raise ValueError('Order bibitems by first citation and remove uncited entries in the LaTeX source.')
         subprocess.run([
-            args.pandoc, '--from=latex', '--to=docx',
+            args.pandoc, '--from=json', '--to=docx',
+            '--resource-path', pathsep.join(resource_paths),
             '--number-sections', '--metadata=lang:uk-UA', '--fail-if-warnings',
             '--output', str(intermediate),
-        ], cwd=source.parent, input=latex, text=True, check=True)
+        ], cwd=source.parent, input=json.dumps(ast), text=True, check=True)
         document = Document(intermediate)
-        format_document(document)
+        format_document(document, args.heading_space_pt, args.table_line_spacing,
+                        args.caption_line_spacing, args.figure_scale)
         output.parent.mkdir(parents=True, exist_ok=True)
         document.save(output)
     print(f'Created {output}')
